@@ -1,0 +1,8 @@
+---
+- name: obtain the name of the vrouter agent container
+  shell: docker ps -q --filter name=vrouter-agent_1
+  register: vrouter_container
+
+- name: copy vrouter port control from container
+  shell: docker cp {{ vrouter_container.stdout }}:/usr/bin/vrouter-port-control /usr/bin/vrouter-port-control
+  run_once: yes
