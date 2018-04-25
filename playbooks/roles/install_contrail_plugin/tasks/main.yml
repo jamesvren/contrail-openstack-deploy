@@ -41,18 +41,38 @@
 - name: set contrail api ip
   set_fact:
     api_server_ip: "{{ item.value.ip }}"
-  when: item.value.roles is defined and item.value.roles.config is defined
+  when: 
+    - item.value.roles is defined
+    - item.value.roles.config is defined
+    - contrail_configuration.IPFABRIC_SERVICE_HOST is undefined
   with_dict: "{{ instances }}"
   tags:
-   - always
+    - always
+
+- name: set contrail api ip if vip is set
+  set_fact:
+    api_server_ip: "{{ contrail_configuration.IPFABRIC_SERVICE_HOST }}"
+  when: contrail_configuration.IPFABRIC_SERVICE_HOST is defined
+  tags:
+    - always
 
 - name: set collector ip
   set_fact:
     collector_ip: "{{ item.value.ip }}"
-  when: item.value.roles is defined and item.value.roles.config is defined
+  when: 
+    - item.value.roles is defined
+    - item.value.roles.config is defined
+    - contrail_configuration.IPFABRIC_SERVICE_HOST is undefined
   with_dict: "{{ instances }}"
   tags:
-   - always
+    - always
+
+- name: set collector ip if vip is set
+  set_fact:
+    collector_ip: "{{ contrail_configuration.IPFABRIC_SERVICE_HOST }}"
+  when: contrail_configuration.IPFABRIC_SERVICE_HOST is defined
+  tags:
+    - always
 
 - debug:
     msg: "api_server_ip {{ api_server_ip }}, collector_ip {{ collector_ip }}"
@@ -171,6 +191,19 @@
 
 - debug:
     msg: "instance_data {{instance_data}}"
+
+- name: create host entry dict
+  set_fact:
+    host_intf_dict: "{{ hostvars['localhost']['instances']|ctrl_data_intf_dict(contrail_configuration, kolla_config if kolla_config is defined else {}, hostvars) }}"
+  when:
+    - contrail_configuration.CONTROL_DATA_NET_LIST is defined
+
+- debug:
+    msg: "DEBUG HOST INTERFACE {{ host_intf_dict }}"
+  when:
+    - contrail_configuration.CONTROL_DATA_NET_LIST is defined
+  tags:
+   - always
 
 - include_tasks: install_neutron_plugin.yml
   name: install neutron plugin
