@@ -5,4 +5,3 @@
 
 - name: copy vrouter port control from container
   shell: docker cp {{ vrouter_container.stdout }}:/usr/bin/vrouter-port-control /usr/bin/vrouter-port-control
-  run_once: yes

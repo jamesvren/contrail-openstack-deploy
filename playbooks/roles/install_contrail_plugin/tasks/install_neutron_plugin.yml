@@ -1,9 +1,8 @@
 ---
-- name: run plugin docker once
+- name: run neutron plugin docker
   shell: docker run -d --rm --network="host" -v /usr/lib/python2.7:/opt/plugin {{ container_registry }}/{{ item }}:{{ contrail_version_tag }}
   with_items:
     - contrail-openstack-neutron-init
-  run_once: yes
 
 - name: set contrail core plugin
   replace:
