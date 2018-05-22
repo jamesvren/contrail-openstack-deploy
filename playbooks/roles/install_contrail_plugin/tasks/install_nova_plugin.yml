@@ -1,6 +1,6 @@
 ---
 - name: run compute plugin docker 
-  shell: docker run -d --rm --network="host" -v /usr/lib/python2.7:/opt/plugin --privileged {{ container_registry }}/{{ item }}:{{ contrail_version_tag }}
+  shell: docker run -d --rm --network="host" --privileged -v /usr/lib/python2.7:/opt/plugin {{ container_registry }}/{{ item }}:{{ contrail_version_tag }}
   with_items:
     - contrail-openstack-compute-init
 
