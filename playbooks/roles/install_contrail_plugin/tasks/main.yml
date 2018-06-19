@@ -44,15 +44,15 @@
   when: 
     - item.value.roles is defined
     - item.value.roles.config is defined
-    - contrail_configuration.IPFABRIC_SERVICE_HOST is undefined
+    - contrail_configuration.CONTROLLER_NODES is undefined
   with_dict: "{{ instances }}"
   tags:
     - always
 
 - name: set contrail api ip if vip is set
   set_fact:
-    api_server_ip: "{{ contrail_configuration.IPFABRIC_SERVICE_HOST }}"
-  when: contrail_configuration.IPFABRIC_SERVICE_HOST is defined
+    api_server_ip: "{{ contrail_configuration.CONTROLLER_NODES }}"
+  when: contrail_configuration.CONTROLLER_NODES is defined
   tags:
     - always
 
@@ -62,15 +62,15 @@
   when: 
     - item.value.roles is defined
     - item.value.roles.config is defined
-    - contrail_configuration.IPFABRIC_SERVICE_HOST is undefined
+    - contrail_configuration.CONTROLLER_NODES is undefined
   with_dict: "{{ instances }}"
   tags:
     - always
 
 - name: set collector ip if vip is set
   set_fact:
-    collector_ip: "{{ contrail_configuration.IPFABRIC_SERVICE_HOST }}"
-  when: contrail_configuration.IPFABRIC_SERVICE_HOST is defined
+    collector_ip: "{{ contrail_configuration.CONTROLLER_NODES }}"
+  when: contrail_configuration.CONTROLLER_NODES is defined
   tags:
     - always
 
