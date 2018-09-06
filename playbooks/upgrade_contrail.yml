@@ -1,6 +1,6 @@
 # orchestrator MUST be passed as a command line argument like so:
 #
-# ansible-playbook -i inventory/ -e orchestrator=none playbook/install_contrail_plugin.yml
+# ansible-playbook -i inventory/ -e orchestrator=openstack playbook/upgrade_contrail.yml
 #
 - name: Create container host group and evaluate variables for Contrail
   hosts: localhost
@@ -29,7 +29,31 @@
     - "{{ config_file }}"
   tags: always
 
-- name: Install Contrail
+- name: Destroy Contrail
+  hosts: container_hosts
+  gather_facts: no
+  pre_tasks:
+    - name: define k8s_master_ip
+      set_fact:
+          k8s_master_ip: "{{ hostvars['localhost'].k8s_master_ip }}"
+      when: hostvars['localhost'].k8s_master_ip is defined
+    - name: define k8s_master_name
+      set_fact:
+          k8s_master_name: "{{ hostvars['localhost'].k8s_master_name }}"
+      when: hostvars['localhost'].k8s_master_name is defined
+  roles:
+    - destroy_contrail
+  vars:
+    - instances: "{{ hostvars['localhost'].instances }}"
+    - roles: "{{ hostvars['localhost'].roles }}"
+  environment:
+    - https_proxy: "{{ contrail_configuration.HTTPS_PROXY|default('') }}"
+    - http_proxy: "{{ contrail_configuration.HTTP_PROXY|default('') }}"
+  tags:
+    - destroy
+
+
+- name: Reinstall Contrail
   hosts: container_hosts
   gather_facts: yes
   pre_tasks:
@@ -42,7 +66,7 @@
           k8s_master_name: "{{ hostvars['localhost'].k8s_master_name }}"
       when: hostvars['localhost'].k8s_master_name is defined
   roles:
-    - install_contrail_plugin
+    - install_contrail
   vars:
     - contrail_configuration: "{{ hostvars['localhost'].contrail_configuration }}"
     - global_configuration: "{{ hostvars['localhost'].global_configuration }}"
@@ -54,5 +78,6 @@
   environment:
     - https_proxy: "{{ contrail_configuration.HTTPS_PROXY|default('') }}"
     - http_proxy: "{{ contrail_configuration.HTTP_PROXY|default('') }}"
-  tags: always
+  tags:
+    - reinstall
 
