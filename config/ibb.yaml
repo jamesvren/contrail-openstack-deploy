@@ -1,0 +1,59 @@
+global_configuration:
+  CONTAINER_REGISTRY: &CONTAINER_REGISTRY 10.240.230.100:5000
+  REGISTRY_PRIVATE_INSECURE: True
+provider_config:
+  bms:
+    ssh_pwd: blade123
+    ssh_user: root
+    ntpserver: pool.ntp.org
+    domainsuffix: local
+instances:
+  bms1:
+    provider: bms
+    ip: 10.240.235.60
+    roles:
+        config_database:
+        config:
+        control:
+        analytics_database:
+        analytics:
+        webui:
+        openstack:
+    neutron_config_dir: /etc/kolla/neutron-server
+    #neutron_config_dir: /var/lib/config-data/puppet-generated/etc/neutron
+    neutron_container_name: neutron_server
+  bms2:
+    provider: bms
+    ip: 10.240.235.70
+    roles:
+        vrouter:
+        openstack_compute:
+    nova_config_dir: /etc/kolla/nova-compute
+    #nova_config_dir: /var/lib/config-data/puppet-generated/etc/nova
+    nova_compute_container_name: nova_compute
+contrail_configuration:
+  CONFIG_DTABASE_NODEMGR__DEFAULTS__minimum_diskGB: "1"
+  CONFIG_NODEMGR__DEFAULTS__minimum_diskGB: "1"
+  DATABASE_NODEMGR__DEFAULTS__minimum_diskGB: "1"
+  CONTAINER_REGISTRY: *CONTAINER_REGISTRY
+  CONTRAIL_VERSION: tfr5_lenovo0011
+  OPENSTACK_VERSION: queens
+  CLOUD_ORCHESTRATOR: openstack
+  RABBITMQ_NODE_PORT: 5673
+  VROUTER_GATEWAY: 10.240.235.1
+  PHYSICAL_INTERFACE: eth0
+  AUTH_MODE: keystone
+  KEYSTONE_AUTH_HOST: 10.240.235.60
+  KEYSTONE_AUTH_URL_VERSION: /v3
+  KEYSTONE_AUTH_ADMIN_USER: admin
+  KEYSTONE_AUTH_ADMIN_PASSWORD: blade123
+  CONTROLLER_NODES: &contrail_ctrl_ip 10.240.235.60
+  CONTROL_NODES: *contrail_ctrl_ip
+kolla_config:
+  kolla_globals:
+    enable_haproxy: no
+    enable_ironic: no
+    enable_swift: no
+    kolla_internal_vip_address: 10.240.235.60
+  kolla_passwords:
+    keystone_admin_password: blade123

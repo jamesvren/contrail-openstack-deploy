@@ -1,0 +1,16 @@
+---
+- name: Restart neutron-server container
+  docker_container:
+    name: "{{ item }}"
+    state: started
+    restart: yes
+  with_items:
+    - neutron_server
+
+- name: Restart nova-compute container
+  docker_container:
+    name: "{{ item }}"
+    state: started
+    restart: yes
+  with_items:
+    - nova_compute

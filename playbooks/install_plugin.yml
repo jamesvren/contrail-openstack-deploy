@@ -1,0 +1,46 @@
+# ansible-playbook -i inventory/ playbook/install_plugin.yml
+#
+- name: Create container host group for Contrail and OpenStack
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  pre_tasks:
+    - name: Expose instances
+      set_fact:
+        instances: "{{ instances }}"
+      when: hostvars['localhost']['instances'] is undefined
+    - name: Expose global configuration
+      set_fact:
+          global_configuration: "{{ global_configuration | default({}) }}"
+      when: hostvars['localhost']['global_configuration'] is undefined
+  roles:
+    - create_container_host_group
+    - create_openstack_host_group
+  vars_files:
+    - "{{ config_file }}"
+  tags: always
+
+- hosts: openstack_nodes
+  pre_tasks:
+    - name: Get Neutron Configuration directory
+      set_fact:
+        neutron_config_directory: "{{ item.value.neutron_config_dir }}"
+        neutron_container_name: "{{ item.value.neutron_container_name }}"
+      when: item.value.roles.openstack is defined or item.value.roles.openstack_control is defined
+      with_dict: "{{ instances }}"
+    - name: Get Nova Configuration directory
+      set_fact:
+        nova_config_directory: "{{ item.value.nova_config_dir }}"
+        nova_compute_container_name: "{{ item.value.nova_compute_container_name }}"
+      when: item.value.roles.openstack_compute is defined
+      with_dict: "{{ instances }}"
+    - debug:
+        msg: "neutron_config_directory: {{neutron_config_directory}}, neutron_container_name: {{neutron_container_name}}, nova_config_directory: {{nova_config_directory}}, nova_compute_container_name: {{nova_compute_container_name}}"
+  vars:
+    - containered_stack: true
+  vars_files:
+    - "{{ hostvars['localhost'].config_file }}"
+  gather_facts: yes
+  roles:
+    - plugin
+  tags: always

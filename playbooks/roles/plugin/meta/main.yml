@@ -1,0 +1,5 @@
+---
+dependencies:
+  - { role: build_node_lists }
+  - { role: set_global_variables }
+  - { role: set_contrail_variables }
