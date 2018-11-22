@@ -27,19 +27,8 @@
     volumes:
       - "/opt/plugin:/opt/plugin/"
 
-- command: docker ps -q --filter name={{ nova_compute_container_name }}
-  register: nova_container_id 
-  become: yes
-  when:
-    - containered_stack is defined
-
-- debug:
-    msg: "nova_container_id is {{ nova_container_id.stdout }}"
-  when:
-    - containered_stack is defined
-
 - name: Copy Nova plugin to Nova compute container
-  command: docker cp {{ item.src }} {{ nova_container_id.stdout }}:{{ item.dest }}
+  command: docker cp {{ item.src }} {{ nova_compute_container_name }}:{{ item.dest }}
   become: yes
   when:
     - containered_stack is defined

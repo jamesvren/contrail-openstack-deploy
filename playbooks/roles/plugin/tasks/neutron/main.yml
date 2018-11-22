@@ -20,7 +20,7 @@
     - { src: "neutron_rootwrap.conf", dest: "rootwrap.conf" }
     #- { src: "api-paste.ini.j2", dest: "api-paste.ini" }
     - { src: "contrail-plugin.pth.j2", dest: "contrail-plugin.pth" }
-    - { src: "neutron-server.json.j2", dest: "config.json" } #only open it for openstack kolla. Do NOT use it for RHOP13.
+    #- { src: "neutron-server.json.j2", dest: "config.json" } #only open it for openstack kolla. Do NOT use it for RHOP13.
   notify:
     - "Restart neutron-server container"
 
@@ -125,20 +125,9 @@
     state: absent
     name: "{{ neutron_opencontrail_init_image_full }}"
 
-- command: docker ps -q --filter name={{ neutron_container_name }}
-  register: neutron_container_id
-  become: yes
-  when:
-    - containered_stack is defined
-
-- debug:
-    msg: "neutron_container_id is {{ neutron_container_id.stdout }}"
-  when:
-    - containered_stack is defined
-
 - name: Copy plugin distro to neutron server container
   become: yes
-  command: docker cp /opt/plugin {{ neutron_container_id.stdout }}:/opt/
+  command: docker cp /opt/plugin {{ neutron_container_name }}:/opt/
   when:
     - containered_stack is defined
 
@@ -151,7 +140,7 @@
 
 - name: Copy plugin to neutron server container
   become: yes
-  command: docker cp {{ neutron_config_directory }}/{{ item.src }} {{ neutron_container_id.stdout }}:{{ item.dest }}
+  command: docker cp {{ neutron_config_directory }}/{{ item.src }} {{ neutron_container_name }}:{{ item.dest }}
   when:
     - containered_stack is defined
   with_items:
