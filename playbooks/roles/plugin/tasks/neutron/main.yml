@@ -2,6 +2,22 @@
 ################################
 # Copy/Modify configuration file
 ################################
+- name: Get volumes mapping directory
+  set_fact:
+    plugin_dir: "{% if neutron_config_root is defined %}{{ neutron_config_root }}/opt/plugin{% else %}opt/plugin{% endif %}"
+
+- debug: var=plugin_dir
+
+- name: Create opt/plugin directory
+  file:
+    path: "{{ plugin_dir }}"
+    state: directory
+
+- name: Create distro directory
+  file:
+    path: "{{ neutron_config_root }}/usr/lib/python2.7/site-packages"
+    state: directory
+
 - debug:
     msg: "Neutron configuration file in {{ neutron_config_directory }}"
 
@@ -14,13 +30,13 @@
 - name: Copying over neutron plugin
   template:
     src: "{{ item.src }}"
-    dest: "{{ neutron_config_directory }}/{{ item.dest }}"
+    dest: "{{ item.dest }}"
   with_items:
-    - { src: "ContrailPlugin.ini.j2", dest: "plugins/opencontrail/ContrailPlugin.ini" }
-    - { src: "neutron_rootwrap.conf", dest: "rootwrap.conf" }
-    #- { src: "api-paste.ini.j2", dest: "api-paste.ini" }
-    - { src: "contrail-plugin.pth.j2", dest: "contrail-plugin.pth" }
-    #- { src: "neutron-server.json.j2", dest: "config.json" } #only open it for openstack kolla. Do NOT use it for RHOP13.
+    - { src: "ContrailPlugin.ini.j2", dest: "{{ neutron_config_directory }}/plugins/opencontrail/ContrailPlugin.ini" }
+    - { src: "neutron_rootwrap.conf", dest: "{{ neutron_config_directory }}/rootwrap.conf" }
+    #- { src: "api-paste.ini.j2", dest: "{{ neutron_config_directory }}/api-paste.ini" }
+    - { src: "contrail-plugin.pth.j2", dest: "{{ neutron_config_root }}usr/lib/python2.7/site-packages/contrail-plugin.pth" }
+    #- { src: "neutron-server.json.j2", dest: "{{ neutron_config_directory }}/config.json" } #only open it for openstack kolla. Do NOT use it for RHOP13.
   notify:
     - "Restart neutron-server container"
 
@@ -34,7 +50,7 @@
 - name: set interface driver
   replace:
     path: "{{ neutron_config_directory }}/neutron.conf"
-    regexp: '^interface_driver =.*'
+    regexp: '^interface_driver.*'
     replace: 'interface_driver ='
   notify:
     - "Restart neutron-server container"
@@ -42,7 +58,7 @@
 - name: set contrail core plugin
   replace: 
     path: "{{ neutron_config_directory }}/neutron.conf"
-    regexp: '^core_plugin =.*'
+    regexp: '^core_plugin.*'
     replace: 'core_plugin = neutron_plugin_contrail.plugins.opencontrail.contrail_plugin.NeutronPluginContrailCoreV2'
   notify:
     - "Restart neutron-server container"
@@ -50,7 +66,7 @@
 - name: set service plugins
   replace:
     path: "{{ neutron_config_directory }}/neutron.conf"
-    regexp: '^service_plugins =.*'
+    regexp: '^service_plugins.*'
     replace: 'service_plugins = neutron_plugin_contrail.plugins.opencontrail.loadbalancer.v2.plugin.LoadBalancerPluginV2'
   notify:
     - "Restart neutron-server container"
@@ -109,11 +125,14 @@
 ################################
 # Init Contrail Plugin
 ################################
+
 - name: Running opencontrail init container for neutron server
   docker_container:
     name: bootstrap_neutron_opencontrail_plugin
     image: "{{ neutron_opencontrail_init_image_full }}"
-    volumes: /opt/plugin:/opt/plugin
+    volumes: "{{ plugin_dir }}:/opt/plugin"
+  notify:
+    - "Restart neutron-server container"
 
 - name: Clean neutron init container
   docker_container:
@@ -124,29 +143,29 @@
   docker_image:
     state: absent
     name: "{{ neutron_opencontrail_init_image_full }}"
-
-- name: Copy plugin distro to neutron server container
-  become: yes
-  command: docker cp /opt/plugin {{ neutron_container_name }}:/opt/
-  when:
-    - containered_stack is defined
-
-- name: Clean temporary plugin directory
-  file:
-    path: /opt/plugin
-    state: absent
-  when:
-    - containered_stack is defined
-
-- name: Copy plugin to neutron server container
-  become: yes
-  command: docker cp {{ neutron_config_directory }}/{{ item.src }} {{ neutron_container_name }}:{{ item.dest }}
-  when:
-    - containered_stack is defined
-  with_items:
-    - { src: "plugins", dest: "/etc/neutron/" }
-    - { src: "rootwrap.conf", dest: "/etc/neutron/" }
-    - { src: "plugin.ini", dest: "/etc/neutron/" }
-    - { src: "contrail-plugin.pth", dest: "/usr/lib/python2.7/site-packages/" }
-  notify:
-    - "Restart neutron-server container"
+  
+#- name: Copy plugin distro to neutron server container
+#  become: yes
+#  command: docker cp /opt/plugin {{ neutron_container_name }}:/opt/
+#  when:
+#    - containered_stack is defined
+#
+#- name: Clean temporary plugin directory
+#  file:
+#    path: /opt/plugin
+#    state: absent
+#  when:
+#    - containered_stack is defined
+#
+#- name: Copy plugin to neutron server container
+#  become: yes
+#  command: docker cp {{ neutron_config_directory }}/{{ item.src }} {{ neutron_container_name }}:{{ item.dest }}
+#  when:
+#    - containered_stack is defined
+#  with_items:
+#    - { src: "plugins", dest: "/etc/neutron/" }
+#    - { src: "rootwrap.conf", dest: "/etc/neutron/" }
+#    - { src: "plugin.ini", dest: "/etc/neutron/" }
+#    - { src: "contrail-plugin.pth", dest: "/usr/lib/python2.7/site-packages/" }
+#  notify:
+#    - "Restart neutron-server container"

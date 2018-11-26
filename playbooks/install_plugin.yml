@@ -25,12 +25,14 @@
     - name: Get Neutron Configuration directory
       set_fact:
         neutron_config_directory: "{{ item.value.neutron_config_dir }}"
+        neutron_config_root: "{{ item.value.neutron_config_dir_root }}"
         neutron_container_name: "{{ item.value.neutron_container_name }}"
       when: item.value.roles.openstack is defined or item.value.roles.openstack_control is defined
       with_dict: "{{ instances }}"
     - name: Get Nova Configuration directory
       set_fact:
         nova_config_directory: "{{ item.value.nova_config_dir }}"
+        nova_config_root: "{{ item.value.nova_config_dir_root }}"
         nova_compute_container_name: "{{ item.value.nova_compute_container_name }}"
       when: item.value.roles.openstack_compute is defined
       with_dict: "{{ instances }}"

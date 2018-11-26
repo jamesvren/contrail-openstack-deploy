@@ -2,18 +2,34 @@
 ################################
 # Copy/Modify configuration file
 ################################
+- name: Get volumes mapping directory
+  set_fact:
+    plugin_dir: "{% if nova_config_root is defined %}{{ nova_config_root }}/opt/plugin{% else %}opt/plugin{% endif %}"
+
+- debug: var=plugin_dir
+
+- name: Create opt/plugin directory
+  file:
+    path: "{{ plugin_dir }}"
+    state: directory
+
+- name: Create distro directory
+  file:
+    path: "{{ nova_config_root }}/usr/lib/python2.7/site-packages/nova/network/"
+    state: directory
+
 - debug:
     msg: "Nova configuration file in {{ nova_config_directory }}"
 
 - name: Copying over nova patch
   template:
     src: "{{ item.src }}"
-    dest: "{{ nova_config_directory }}/{{ item.dest }}"
+    dest: "{{ item.dest }}"
   with_items:
-    - { src: "nova_rootwrap.conf", dest: "nova_rootwrap.conf" }
-    - { src: "model.py.j2", dest: "model.py" }
-    - { src: "os_vif_util.py.j2", dest: "os_vif_util.py" }
-    - { src: "contrail-plugin.pth.j2", dest: "contrail-plugin.pth" }
+    - { src: "nova_rootwrap.conf", dest: "{{ nova_config_directory }}nova_rootwrap.conf" }
+    - { src: "model.py.j2", dest: "{{ nova_config_root }}usr/lib/python2.7/site-packages/nova/network/model.py" }
+    - { src: "os_vif_util.py.j2", dest: "{{ nova_config_root }}usr/lib/python2.7/site-packages/nova/network/os_vif_util.py" }
+    - { src: "contrail-plugin.pth.j2", dest: "{{ nova_config_root }}usr/lib/python2.7/site-packages/contrail-plugin.pth" }
   notify:
     - Restart nova-compute container
 
@@ -25,20 +41,22 @@
     name: bootstrap_nova_compute_opencontrail_plugin
     image: "{{ nova_compute_opencontrail_init_image_full }}"
     volumes:
-      - "/opt/plugin:/opt/plugin/"
-
-- name: Copy Nova plugin to Nova compute container
-  command: docker cp {{ item.src }} {{ nova_compute_container_name }}:{{ item.dest }}
-  become: yes
-  when:
-    - containered_stack is defined
-  with_items:
-    - { src: "/opt/plugin", dest: "/opt/" }
-    - { src: "{{ nova_config_directory }}/contrail-plugin.pth", dest: "/usr/lib/python2.7/site-packages/" }
-    - { src: "{{ nova_config_directory }}/model.py", dest: "/usr/lib/python2.7/site-packages/nova/network/" }
-    - { src: "{{ nova_config_directory }}/os_vif_util.py", dest: "/usr/lib/python2.7/site-packages/nova/network/" }
+      - "{{ plugin_dir }}:/opt/plugin/"
   notify:
     - Restart nova-compute container
+
+#- name: Copy Nova plugin to Nova compute container
+#  command: docker cp {{ item.src }} {{ nova_compute_container_name }}:{{ item.dest }}
+#  become: yes
+#  when:
+#    - containered_stack is defined
+#  with_items:
+#    - { src: "/opt/plugin", dest: "/opt/" }
+#    - { src: "{{ nova_config_directory }}/contrail-plugin.pth", dest: "/usr/lib/python2.7/site-packages/" }
+#    - { src: "{{ nova_config_directory }}/model.py", dest: "/usr/lib/python2.7/site-packages/nova/network/" }
+#    - { src: "{{ nova_config_directory }}/os_vif_util.py", dest: "/usr/lib/python2.7/site-packages/nova/network/" }
+#  notify:
+#    - Restart nova-compute container
 
 - name: Clean Nova init container
   docker_container:
