@@ -15,7 +15,7 @@
 
 - name: Create distro directory
   file:
-    path: "{{ nova_config_root }}/usr/lib/python2.7/site-packages/nova/network/"
+    path: "{{ nova_config_root }}/usr/lib/python2.7/site-packages/"
     state: directory
 
 - debug:
@@ -27,8 +27,6 @@
     dest: "{{ item.dest }}"
   with_items:
     - { src: "nova_rootwrap.conf", dest: "{{ nova_config_directory }}nova_rootwrap.conf" }
-    - { src: "model.py.j2", dest: "{{ nova_config_root }}usr/lib/python2.7/site-packages/nova/network/model.py" }
-    - { src: "os_vif_util.py.j2", dest: "{{ nova_config_root }}usr/lib/python2.7/site-packages/nova/network/os_vif_util.py" }
     - { src: "contrail-plugin.pth.j2", dest: "{{ nova_config_root }}usr/lib/python2.7/site-packages/contrail-plugin.pth" }
   notify:
     - Restart nova-compute container
@@ -53,8 +51,6 @@
 #  with_items:
 #    - { src: "/opt/plugin", dest: "/opt/" }
 #    - { src: "{{ nova_config_directory }}/contrail-plugin.pth", dest: "/usr/lib/python2.7/site-packages/" }
-#    - { src: "{{ nova_config_directory }}/model.py", dest: "/usr/lib/python2.7/site-packages/nova/network/" }
-#    - { src: "{{ nova_config_directory }}/os_vif_util.py", dest: "/usr/lib/python2.7/site-packages/nova/network/" }
 #  notify:
 #    - Restart nova-compute container
 

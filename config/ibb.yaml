@@ -4,7 +4,7 @@ provider_config:
     ssh_user: heat-admin
     ssh_private_key: ~/.ssh/id_rsa
     #ntpserver: pool.ntp.org
-    domainsuffix: local
+    #domainsuffix: local
 instances:
   bms1:
     provider: bms
@@ -17,44 +17,37 @@ instances:
         analytics:
         webui:
         openstack:
-    #neutron_config_dir: /etc/kolla/neutron-server
-    neutron_config_dir: /var/lib/config-data/puppet-generated/neutron/etc/neutron/
-    neutron_config_dir_root: /var/lib/config-data/puppet-generated/neutron/
-    #neutron_container_name: neutron_server
-    neutron_container_name: neutron_api
   bms2:
     provider: bms
     ip: 172.30.5.16
     roles:
         vrouter:
         openstack_compute:
-    #nova_config_dir: /etc/kolla/nova-compute
-    nova_config_dir: /var/lib/config-data/puppet-generated/nova_libvirt/etc/nova/
-    nova_config_dir_root: /var/lib/config-data/puppet-generated/nova_libvirt/
-    nova_compute_container_name: nova_compute
   bms3:
     provider: bms
     ip: 172.30.5.8
     roles:
         vrouter:
         openstack_compute:
-    #nova_config_dir: /etc/kolla/nova-compute
-    nova_config_dir: /var/lib/config-data/puppet-generated/nova_libvirt/etc/nova/
-    nova_config_dir_root: /var/lib/config-data/puppet-generated/nova_libvirt/
-    nova_compute_container_name: nova_compute
 global_configuration:
   CONTAINER_REGISTRY: 10.240.230.100:5000
   #REGISTRY_PRIVATE_INSECURE: True
 contrail_configuration:
+  neutron_config_dir: /var/lib/config-data/puppet-generated/neutron/etc/neutron/
+  neutron_config_dir_root: /var/lib/config-data/puppet-generated/neutron/
+  neutron_container_name: neutron_api
+  nova_config_dir: /var/lib/config-data/puppet-generated/nova_libvirt/etc/nova/
+  nova_config_dir_root: /var/lib/config-data/puppet-generated/nova_libvirt/
+  nova_compute_container_name: nova_compute
   CONFIG_DTABASE_NODEMGR__DEFAULTS__minimum_diskGB: "1"
   CONFIG_NODEMGR__DEFAULTS__minimum_diskGB: "1"
   DATABASE_NODEMGR__DEFAULTS__minimum_diskGB: "1"
-  CONTRAIL_VERSION: tfr5_lenovo0012
+  CONTRAIL_VERSION: tfr5_lenovo0015
   OPENSTACK_VERSION: queens
   CLOUD_ORCHESTRATOR: openstack
-  RABBITMQ_NODE_PORT: 5673
-  VROUTER_GATEWAY: 192.168.100.1
-  PHYSICAL_INTERFACE: vlan205@eth2
+  RABBITMQ_NODE_PORT: 5672
+  REDIS_SERVER_PORT: 6378
+  VROUTER_GATEWAY: 192.168.120.1
   AUTH_MODE: keystone
   KEYSTONE_AUTH_HOST: 192.168.100.18
   KEYSTONE_AUTH_PUBLIC_PORT: 9696
@@ -62,8 +55,8 @@ contrail_configuration:
   KEYSTONE_AUTH_ADMIN_USER: admin
   KEYSTONE_AUTH_ADMIN_PASSWORD: dJBnUQwQjsmB8w8HYQEKFFymv
   KEYSTONE_AUTH_REGION_NAME: regionOne
-  CONTROLLER_NODES: &contrail_ctrl_ip 192.168.100.19
-  CONTROL_NODES: *contrail_ctrl_ip
+  CONTROLLER_NODES: 192.168.100.19
+  CONTROL_NODES: 192.168.120.19
 kolla_config:
   kolla_globals:
     enable_haproxy: no

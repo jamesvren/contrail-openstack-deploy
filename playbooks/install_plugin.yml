@@ -24,18 +24,14 @@
   pre_tasks:
     - name: Get Neutron Configuration directory
       set_fact:
-        neutron_config_directory: "{{ item.value.neutron_config_dir }}"
-        neutron_config_root: "{{ item.value.neutron_config_dir_root }}"
-        neutron_container_name: "{{ item.value.neutron_container_name }}"
-      when: item.value.roles.openstack is defined or item.value.roles.openstack_control is defined
-      with_dict: "{{ instances }}"
+        neutron_config_directory: "{{ contrail_configuration.neutron_config_dir }}"
+        neutron_config_root: "{{ contrail_configuration.neutron_config_dir_root }}"
+        neutron_container_name: "{{ contrail_configuration.neutron_container_name }}"
     - name: Get Nova Configuration directory
       set_fact:
-        nova_config_directory: "{{ item.value.nova_config_dir }}"
-        nova_config_root: "{{ item.value.nova_config_dir_root }}"
-        nova_compute_container_name: "{{ item.value.nova_compute_container_name }}"
-      when: item.value.roles.openstack_compute is defined
-      with_dict: "{{ instances }}"
+        nova_config_directory: "{{ contrail_configuration.nova_config_dir }}"
+        nova_config_root: "{{ contrail_configuration.nova_config_dir_root }}"
+        nova_compute_container_name: "{{ contrail_configuration.nova_compute_container_name }}"
     - debug:
         msg: "neutron_config_directory: {{neutron_config_directory}}, neutron_container_name: {{neutron_container_name}}, nova_config_directory: {{nova_config_directory}}, nova_compute_container_name: {{nova_compute_container_name}}"
   vars:
