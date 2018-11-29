@@ -26,8 +26,8 @@
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   with_items:
-    - { src: "nova_rootwrap.conf", dest: "{{ nova_config_directory }}nova_rootwrap.conf" }
-    - { src: "contrail-plugin.pth.j2", dest: "{{ nova_config_root }}usr/lib/python2.7/site-packages/contrail-plugin.pth" }
+    - { src: "nova_rootwrap.conf", dest: "{{ nova_config_directory }}/nova_rootwrap.conf" }
+    - { src: "contrail-plugin.pth.j2", dest: "{{ nova_config_root }}/usr/lib/python2.7/site-packages/contrail-plugin.pth" }
   notify:
     - Restart nova-compute container
 
@@ -40,6 +40,12 @@
     image: "{{ nova_compute_opencontrail_init_image_full }}"
     volumes:
       - "{{ plugin_dir }}:/opt/plugin/"
+  notify:
+    - Restart nova-compute container
+
+- name: Copy vroute_port_control to /usr/bin
+  become: yes
+  command: mv {{ plugin_dir }}/bin {{ nova_config_root }}/usr/
   notify:
     - Restart nova-compute container
 
