@@ -5,7 +5,7 @@
 - name: Create container host group and evaluate variables for Contrail
   hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: yes
   pre_tasks:
     - name: Expose instances
       set_fact:
@@ -19,17 +19,20 @@
       set_fact:
           remote_locations: "{{ remote_locations | default({}) }}"
       when: hostvars['localhost']['remote_locations'] is undefined
+    - name: Expose provider config
+      set_fact:
+          provider_config: "{{ provider_config | default({}) }}"
+      when: hostvars['localhost']['provider_config'] is undefined
   roles:
-    - create_container_host_group
-    - set_global_variables
-    - build_node_lists
-    - set_contrail_variables
-    - set_k8s_variables
+    - contrail_deployer
+    - k8s_deployer
   vars_files:
     - "{{ config_file }}"
   tags: always
+  environment:
+    - "{{ contrail_ansible_environment | default({})}}"
 
-- name: Install Contrail
+- name: Install Contrail Plugin
   hosts: container_hosts
   gather_facts: yes
   pre_tasks:
@@ -42,8 +45,9 @@
           k8s_master_name: "{{ hostvars['localhost'].k8s_master_name }}"
       when: hostvars['localhost'].k8s_master_name is defined
   roles:
-    - install_contrail_plugin
+    - contrail_plugin
   vars:
+    - provider_config: "{{ hostvars['localhost']['provider_config'] }}"
     - contrail_configuration: "{{ hostvars['localhost'].contrail_configuration }}"
     - global_configuration: "{{ hostvars['localhost'].global_configuration }}"
     - remote_locations: "{{ hostvars['localhost'].remote_locations }}"
@@ -51,8 +55,10 @@
     - container_registry: "{{ hostvars['localhost'].container_registry }}"
     - contrail_version_tag: "{{ hostvars['localhost'].contrail_version_tag }}"
     - roles: "{{ hostvars['localhost'].roles }}"
+    - node_roles_dict: "{{ hostvars['localhost'].node_roles_dict }}"
+    - api_server: "{{ hostvars['localhost'].api_server }}"
   environment:
     - https_proxy: "{{ contrail_configuration.HTTPS_PROXY|default('') }}"
     - http_proxy: "{{ contrail_configuration.HTTP_PROXY|default('') }}"
+    - "{{ contrail_ansible_environment | default({}) }}"
   tags: always
-

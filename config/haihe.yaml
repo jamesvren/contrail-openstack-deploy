@@ -1,0 +1,83 @@
+provider_config:
+  bms:
+    ssh_pwd: huayun123
+    ssh_user: root
+    ntpserver: pool.ntp.org
+    domainsuffix: local
+instances:
+  bms1:
+    provider: bms
+    ip: 10.131.17.41
+    roles:
+      config_database:
+      config:
+      control:
+      analytics_database:
+      analytics:
+      webui:
+      vrouter:
+      openstack:
+      openstack_compute:
+      openstack_compute_legacy:
+  bms2:
+    provider: bms
+    ip: 10.131.17.42
+    roles:
+      config_database:
+      config:
+      control:
+      analytics_database:
+      analytics:
+      webui:
+      vrouter:
+      openstack:
+      openstack_compute:
+      openstack_compute_legacy:
+  bms3:
+    provider: bms
+    ip: 10.131.17.43
+    roles:
+      config_database:
+      config:
+      control:
+      analytics_database:
+      analytics:
+      webui:
+      vrouter:
+      openstack:
+      openstack_compute:
+      openstack_compute_legacy:
+global_configuration:
+  #CONTAINER_REGISTRY: 10.130.176.10:6666
+  CONTAINER_REGISTRY: 10.131.17.40:6666
+  REGISTRY_PRIVATE_INSECURE: True
+contrail_configuration:
+  CONTRAIL_VERSION: dev
+  OPENSTACK_VERSION: mitaka
+  CLOUD_ORCHESTRATOR: openstack
+  RABBITMQ_NODE_PORT: 5673
+  VROUTER_GATEWAY: 133.132.1.1
+  CONTROLLER_NODES: 10.131.17.41,10.131.17.42,10.131.17.43
+  # Use this to specify the IP addresses on each contrail node where Contrail services are to be hosted.   
+  # In this instance, all contrail services will run on the control-data subnet (192.168.10.0/24)
+  CONTROL_NODES: 133.132.1.11,133.132.1.12,133.132.1.13
+  CONTROL_INTROSPECT_PORT: 9083
+  COLLECTOR_PORT: 9086
+  QUERYENGINE_INTROSPECT_PORT: 9092
+  AUTH_MODE: keystone
+  KEYSTONE_AUTH_PROTO: http
+  KEYSTONE_AUTH_URL_VERSION: /v3
+  KEYSTONE_AUTH_ADMIN_PASSWORD: passw0rd
+  KEYSTONE_AUTH_PUBLIC_PORT: 6000
+  KEYSTONE_AUTH_ADMIN_PORT: 45357
+  KEYSTONE_AUTH_REGION_NAME: RegionTwo
+  ENCAP_PRIORITY: "VXLAN,MPLSoUDP,MPLSoGRE"
+  api_server: 10.131.17.44
+  CONFIG_NODEMGR__DEFAULTS__minimum_diskGB: "2"
+  DATABASE_NODEMGR__DEFAULTS__minimum_diskGB: "2"
+  #JVM_EXTRA_OPTS: "-Xms1g -Xmx2g"
+  METADATA_PROXY_SECRET: 0dffcb0d5f47e83f25b8
+kolla_config:
+  kolla_globals:
+    # Virtual IP where Openstack services are accessible (haproxy/keepalived will be used on this IP) 
+    kolla_internal_vip_address: 10.131.17.44

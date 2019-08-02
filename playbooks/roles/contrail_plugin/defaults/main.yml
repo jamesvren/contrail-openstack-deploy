@@ -1,0 +1,2 @@
+opencontrail_api_server_ip: "{{ contrail_configuration.CONFIG_NODES | default(contrail_configuration.CONTROLLER_NODES) | replace (',', ' ') }}"
+opencontrail_collector_ip: "{{ contrail_configuration.ANALYTICS_NODES | default(contrail_configuration.CONTROLLER_NODES) | replace (',', ' ') }}"

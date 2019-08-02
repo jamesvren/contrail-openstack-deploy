@@ -1,20 +1,23 @@
 [APISERVER]
-api_server_ip = {{ api_server_ip }}
 api_server_port = 8082
+api_server_ip = {{ opencontrail_api_server_ip }}
 multi_tenancy = True
 contrail_extensions = ipam:neutron_plugin_contrail.plugins.opencontrail.contrail_plugin_ipam.NeutronPluginContrailIpam,policy:neutron_plugin_contrail.plugins.opencontrail.contrail_plugin_policy.NeutronPluginContrailPolicy,route-table:neutron_plugin_contrail.plugins.opencontrail.contrail_plugin_vpc.NeutronPluginContrailVpc,contrail:None,service-interface:None,vf-binding:None
 
 [COLLECTOR]
-analytics_api_ip = {{ collector_ip }}
+analytics_api_ip = {{ opencontrail_collector_ip }}
 analytics_api_port = 8081
 
 [keystone_authtoken]
 auth_host = {{ contrail_configuration.KEYSTONE_AUTH_HOST }}
-auth_port = 5000
-auth_protocol = http
+auth_port = {{ contrail_configuration.KEYSTONE_AUTH_PUBLIC_PORT }}
+auth_protocol = {{ contrail_configuration.KEYSTONE_AUTH_PROTO }}
 admin_user = {{ contrail_configuration.KEYSTONE_AUTH_ADMIN_USER }}
 admin_password = {{ contrail_configuration.KEYSTONE_AUTH_ADMIN_PASSWORD }}
-admin_tenant_name = admin
+admin_tenant_name = {{ contrail_configuration.KEYSTONE_AUTH_ADMIN_TENANT }}
 insecure = True
-region_name = RegionOne
+region_name = {{ contrail_configuration.KEYSTONE_AUTH_REGION_NAME }}
+
+
+
 

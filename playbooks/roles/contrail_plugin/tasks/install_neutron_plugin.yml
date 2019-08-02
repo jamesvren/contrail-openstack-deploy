@@ -1,0 +1,97 @@
+---
+- name: run neutron plugin docker
+  shell: docker run -d --rm --network="host" -e OPENSTACK_VERSION={{ contrail_configuration.OPENSTACK_VERSION }} -v /usr/lib/python2.7:/opt/plugin {{ container_registry }}/{{ item }}:{{ contrail_version_tag }}
+  with_items:
+    - contrail-openstack-neutron-init
+
+# - name: set contrail core plugin
+#   replace:
+#     path: /etc/neutron/neutron.conf
+#     regexp: '^core_plugin.*'
+#     replace: 'core_plugin = neutron_plugin_contrail.plugins.opencontrail.contrail_plugin.NeutronPluginContrailCoreV2'
+- name: set contrail core plugin
+  lineinfile:
+    dest: /etc/neutron/neutron.conf
+    regexp: '^core_plugin.*'
+    line: 'core_plugin = neutron_plugin_contrail.plugins.opencontrail.contrail_plugin.NeutronPluginContrailCoreV2'
+
+# - name: set service plugins
+#   replace:
+#     path: /etc/neutron/neutron.conf
+#     regexp: '^service_plugins.*'
+#     replace: 'service_plugins = neutron_plugin_contrail.plugins.opencontrail.loadbalancer.v2.plugin.LoadBalancerPluginV2'
+- name: set service plugins
+  lineinfile:
+    dest: /etc/neutron/neutron.conf
+    regexp: '^service_plugins.*'
+    line: 'service_plugins = neutron_plugin_contrail.plugins.opencontrail.loadbalancer.v2.plugin.LoadBalancerPluginV2'
+
+- name: set api extension path
+  lineinfile:
+    dest: /etc/neutron/neutron.conf
+    regexp: '.*api_extensions_path.*'
+    insertafter: '^service_plugins'
+    line: 'api_extensions_path = /usr/lib/python2.7/site-packages/neutron_plugin_contrail/extensions:/usr/lib/python2.7/site-packages/neutron_lbaas/extensions'
+
+- name: Create quotas section 
+  lineinfile:
+    dest: /etc/neutron/neutron.conf
+    regexp: '^\[quotas\]'
+    line: '[quotas]'
+
+- name: set quotas network value
+  lineinfile:
+    dest: /etc/neutron/neutron.conf
+    insertafter: '^\[quotas\]'
+    regexp: '^quota_network.*'
+    line: 'quota_network = -1'
+
+- name: set quotas subnet value
+  lineinfile:
+    dest: /etc/neutron/neutron.conf
+    insertafter: '^\[quotas\]'
+    regexp: '^quota_subnet.*'
+    line: 'quota_subnet = -1'
+
+- name: set quotas port value
+  lineinfile:
+    path: /etc/neutron/neutron.conf
+    insertafter: '^\[quotas\]'
+    regexp: '^quota_port.*'
+    line: 'quota_port = -1'
+
+- name: set quotas driver value
+  lineinfile:
+    path: /etc/neutron/neutron.conf
+    insertafter: '^\[quotas\]'
+    regexp: '^quota_driver.*'
+    line: 'quota_driver = neutron_plugin_contrail.plugins.opencontrail.quota.driver.QuotaDriver'
+
+- name: create contrail plugin directory
+  file:
+    path: /etc/neutron/plugins/opencontrail
+    owner: neutron
+    group: neutron
+    state: directory
+
+- name: copy contrail plugin
+  template:
+    src: ContrailPlugin.ini.j2
+    dest: /etc/neutron/plugins/opencontrail/ContrailPlugin.ini
+    owner: neutron
+    group: neutron
+
+- name: link contrail plugin
+  file:
+    src: /etc/neutron/plugins/opencontrail/ContrailPlugin.ini
+    dest: /etc/neutron/plugin.ini
+    owner: neutron
+    group: neutron
+    state: link
+
+- name: restart neutron server
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - neutron-server
